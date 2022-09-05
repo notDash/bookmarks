@@ -7,5 +7,4 @@ declare module 'vue' {
     Loading: typeof import('./components/Loading.vue')['default']
   }
 }
-
 export { }
