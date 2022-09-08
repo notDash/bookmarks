@@ -14,12 +14,14 @@
               <n-divider title-placement="left" dashed>
               热门点击 Top5
               </n-divider>
+              <hot-top-5 />
               <n-divider title-placement="left" dashed>
               自定义常用标签
               </n-divider>
             </n-layout-sider>
             <n-layout-content content-style="padding: 24px;height: 500px;">
               <n-tree
+                :pattern="pattern"
                 ref="treeInstRef"
                 block-line
                 :data="bookmarkTreeNodes"
@@ -27,6 +29,7 @@
                 virtual-scroll
                 style="height: 440px"
                 :node-props="nodeProps"
+                :show-irrelevant-nodes="showIrrelevantNodes"
               />
             </n-layout-content>
           </n-layout>
@@ -39,7 +42,7 @@
 </template>
 
 <script lang="ts">
-
+import HotTop5 from '@/components/HotTop5.vue'
 import { ref, defineComponent } from 'vue'
 import { 
   NTabs, 
@@ -50,7 +53,7 @@ import {
   NLayoutSider,
   NLayoutContent,
   NTree,
-  TreeOption
+  TreeOption,
  } from 'naive-ui'
 
 
@@ -63,7 +66,8 @@ export default defineComponent({
     NLayout,
     NLayoutSider,
     NLayoutContent,
-    NTree
+    NTree,
+    HotTop5
   },
   setup(props) {
 
@@ -94,6 +98,38 @@ export default defineComponent({
       return result
     }
 
+    /**
+     * 存储热门点击书签
+     */
+    const cacheHots = (bookmarkNode: TreeOption) => {
+      let hotIds = localStorage.getItem('SEARCH_HOT_INS')
+      let hotIdArr = []
+      if (hotIds) {
+        hotIdArr = JSON.parse(hotIds)
+        const target = hotIdArr.find(function(item: any) {
+          return item.id == bookmarkNode.id
+        })
+        if (target) {
+          target.times += 1
+        } else {
+          hotIdArr.push({
+            id: bookmarkNode.id,
+            url: bookmarkNode.url,
+            title: bookmarkNode.title,
+            times: 1
+          })
+        }
+      } else {
+        hotIdArr.push({
+          id: bookmarkNode.id,
+          url: bookmarkNode.url,
+          title: bookmarkNode.title,
+          times: 1
+        }) 
+      }
+      localStorage.setItem('SEARCH_HOT_INS', JSON.stringify(hotIdArr))
+    }
+
     chrome.bookmarks.getTree((bmTreeNodes: Array<any>) => {
       bookmarkTreeNodes.value = formatTree(bmTreeNodes, '')
     });
@@ -119,12 +155,16 @@ export default defineComponent({
     const nodeProps = ({ option }: { option: TreeOption }) => {
         return {
           onClick () {
+            console.log(option)
+            cacheHots(option)
+            const url = option.url || ''
+           url &&  window.open(`${url}`)
           }
         }
       }
     
     return {
-      showIrrelevantNodes: ref(true),
+      showIrrelevantNodes: ref(false),
       pattern,
       bookmarkTreeNodes,
       remove,

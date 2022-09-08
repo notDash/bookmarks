@@ -4,6 +4,7 @@
 
 declare module 'vue' {
   export interface GlobalComponents {
+    BookMarkItem: typeof import('./components/BookMarkItem.vue')['default']
     Loading: typeof import('./components/Loading.vue')['default']
   }
 }
