@@ -9,17 +9,25 @@
               content-style="padding: 24px;"
               bordered
             >
-              <n-input round placeholder="输入名称进行搜索">
+              <n-input v-model:value="pattern" round placeholder="输入名称进行搜索">
               </n-input>
               <n-divider title-placement="left" dashed>
-              点击热门 Top5
+              热门点击 Top5
               </n-divider>
               <n-divider title-placement="left" dashed>
               自定义常用标签
               </n-divider>
             </n-layout-sider>
-            <n-layout-content content-style="padding: 24px;">
-              平山道
+            <n-layout-content content-style="padding: 24px;height: 500px;">
+              <n-tree
+                ref="treeInstRef"
+                block-line
+                :data="bookmarkTreeNodes"
+                default-expand-all
+                virtual-scroll
+                style="height: 440px"
+                :node-props="nodeProps"
+              />
             </n-layout-content>
           </n-layout>
         </n-tab-pane>
@@ -29,9 +37,10 @@
       </n-tabs>
   </div>
 </template>
-<script>
 
-import { ref } from 'vue'
+<script lang="ts">
+
+import { ref, defineComponent } from 'vue'
 import { 
   NTabs, 
   NTabPane, 
@@ -39,10 +48,13 @@ import {
   NDivider, 
   NLayout,
   NLayoutSider,
-  NLayoutContent
+  NLayoutContent,
+  NTree,
+  TreeOption
  } from 'naive-ui'
 
-export default {
+
+export default defineComponent({
   components: {
     NInput,
     NTabs,
@@ -50,22 +62,47 @@ export default {
     NDivider,
     NLayout,
     NLayoutSider,
-    NLayoutContent
+    NLayoutContent,
+    NTree
   },
   setup(props) {
 
-    const bookmarkTreeNodes = ref({})
+    const pattern = ref('')
+    const bookmarkTreeNodes = ref<any[]>([])
+  
+    const formatTree = (tree: Array<any>, parentKey: string) => {
+      let result = tree
+      if (result && result.length > 0) {
+        result = result.map((node, index) => {
+          node.label = node.title
+          if (!parentKey && !node.label) {
+            node.label = '全部'
+          }
+          if (parentKey) {
+            node.key = `${parentKey}-${index}`
+          } else {
+             node.key = '0'
+          }
+          
+          if (node.children) {
+            node.children = formatTree(node.children, node.key)
+          }
+          return node
+        })
+      }
+      
+      return result
+    }
 
-    chrome.bookmarks.getTree((bookmarkTreeNodes) => {
-      console.log('bookmarkTreeNodes: ', bookmarkTreeNodes)
-      bookmarkTreeNodes.value = bookmarkTreeNodes
+    chrome.bookmarks.getTree((bmTreeNodes: Array<any>) => {
+      bookmarkTreeNodes.value = formatTree(bmTreeNodes, '')
     });
 
-    const remove = (id) => {
+    const remove = (id: string) => {
       chrome.bookmarks.remove(id)
     }
 
-    const create = (config) => {
+    const create = () => {
       chrome.bookmarks.create({
         parentId: '',
         title: '',
@@ -73,20 +110,30 @@ export default {
       })
     }
 
-    const update = (id, config) => {
+    const update = (id: string) => {
       chrome.bookmarks.update(id, {
         title: ''
       })
     }
+
+    const nodeProps = ({ option }: { option: TreeOption }) => {
+        return {
+          onClick () {
+          }
+        }
+      }
     
     return {
+      showIrrelevantNodes: ref(true),
+      pattern,
       bookmarkTreeNodes,
       remove,
       create,
-      update
+      update,
+      nodeProps
     }
   }
-}
+})
 </script>
 <style scoped>
 .page-home {
