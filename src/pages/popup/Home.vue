@@ -9,7 +9,7 @@
               content-style="padding: 24px;"
               bordered
             >
-              <n-input v-model:value="pattern" round placeholder="输入名称进行搜索">
+              <n-input autofocus="true" clearable v-model:value="pattern" round placeholder="输入名称进行搜索">
               </n-input>
               <n-divider title-placement="left" dashed>
               热门点击 Top5
