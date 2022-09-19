@@ -1,7 +1,7 @@
 <template>
     <div class="hot-top-5">
         <div v-for="(item, index) in searchHotItems" :key="index" class="bookmark-item">
-            <a :href="item.url">{{item.title}}</a><n-icon @click="() => onItemDel(item)" class="icon-delete" :size="16"><TrashOutline /></n-icon>
+            <a @click="() => openTab(item.url)" :href="item.url">{{item.title}}</a><n-icon @click="() => onItemDel(item)" class="icon-delete" :size="16"><TrashOutline /></n-icon>
         </div>
     </div>
 </template>
@@ -80,8 +80,13 @@ export default defineComponent({
             }
         }
 
+        const openTab =  (url: string) => {
+            window.open(url)
+        }
+
 
         return {
+            openTab,
             onItemDel,
             getSearchHotIds,
             searchHotIds,
